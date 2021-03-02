@@ -41,9 +41,17 @@ export function TxTableRow({ transaction }: Props) {
 
   let slotTiming: SlotTiming | undefined;
   let landedTime: number | undefined;
+  let forkedSlots = [];
   if (landedSlot !== undefined) {
     landedTime = received?.find((r) => r.slot === landedSlot)?.timestamp;
     slotTiming = slotMetrics.current.get(landedSlot);
+    if (targetSlot) {
+      for (let slot = targetSlot; slot < landedSlot; slot++) {
+        if (slotMetrics.current.get(slot)?.confirmed === undefined) {
+          forkedSlots.push(slot.toString().substr(-3));
+        }
+      }
+    }
   }
 
   return (
@@ -57,6 +65,7 @@ export function TxTableRow({ transaction }: Props) {
       <td>{slotTiming?.numTransactions || "-"}</td>
       <td>{slotTiming?.numEntries || "-"}</td>
       <td>{slotTiming?.maxTpe || "-"}</td>
+      <td>{forkedSlots.toString() || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, slotTiming?.firstShred) || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, landedTime) || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, slotTiming?.fullSlot) || "-"}</td>

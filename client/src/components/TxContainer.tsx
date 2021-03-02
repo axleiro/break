@@ -135,6 +135,7 @@ function DebugTable() {
                 <th className="text-muted sticky">Tx Count</th>
                 <th className="text-muted sticky">Entry Count</th>
                 <th className="text-muted sticky">Max Tx Per Entry</th>
+                <th className="text-muted sticky">Forked Slots</th>
                 <th className="text-muted sticky">First Shred</th>
                 <th className="text-muted sticky">Tx Landed</th>
                 <th className="text-muted sticky">All Shreds</th>

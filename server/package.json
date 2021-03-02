@@ -10,7 +10,7 @@
     "url": "https://github.com/solana-labs/break"
   },
   "scripts": {
-    "build": "webpack --mode production",
+    "build": "echo 'already built'",
     "test": "echo 'no test specified'",
     "start": "node ./dist/server.js",
     "start:dev": "ts-node src/index.ts",
