@@ -1,0 +1,27 @@
+{
+  "files": {
+    "main.css": "/static/css/main.0232dce7.chunk.css",
+    "main.js": "/static/js/main.2fd330d3.chunk.js",
+    "main.js.map": "/static/js/main.2fd330d3.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.4c2d2e00.js",
+    "runtime-main.js.map": "/static/js/runtime-main.4c2d2e00.js.map",
+    "static/js/2.c0856ffa.chunk.js": "/static/js/2.c0856ffa.chunk.js",
+    "static/js/2.c0856ffa.chunk.js.map": "/static/js/2.c0856ffa.chunk.js.map",
+    "index.html": "/index.html",
+    "static/css/main.0232dce7.chunk.css.map": "/static/css/main.0232dce7.chunk.css.map",
+    "static/js/2.c0856ffa.chunk.js.LICENSE.txt": "/static/js/2.c0856ffa.chunk.js.LICENSE.txt",
+    "static/js/create-transaction-worker-script.45dfeaf1.worker.js": "/static/js/create-transaction-worker-script.45dfeaf1.worker.js",
+    "static/js/create-transaction-worker-script.45dfeaf1.worker.js.LICENSE.txt": "/static/js/create-transaction-worker-script.45dfeaf1.worker.js.LICENSE.txt",
+    "static/js/create-transaction-worker-script.45dfeaf1.worker.js.map": "/static/js/create-transaction-worker-script.45dfeaf1.worker.js.map",
+    "static/media/index.scss": "/static/media/sidebar-cover.37a4e4cf.jpg",
+    "static/media/break.svg": "/static/media/break.1f05981c.svg",
+    "static/media/graphic.f8dd2e42.svg": "/static/media/graphic.f8dd2e42.svg",
+    "static/media/solana.svg": "/static/media/solana.7b25ef17.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.4c2d2e00.js",
+    "static/js/2.c0856ffa.chunk.js",
+    "static/css/main.0232dce7.chunk.css",
+    "static/js/main.2fd330d3.chunk.js"
+  ]
+}
