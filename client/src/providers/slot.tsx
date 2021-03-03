@@ -1,8 +1,14 @@
+import { LeaderSchedule } from "@solana/web3.js";
 import React from "react";
 import { useConnection } from "./rpc";
+import { DEBUG_MODE } from "./transactions/confirmed";
 
 const SlotContext = React.createContext<
   React.MutableRefObject<number | undefined> | undefined
+>(undefined);
+
+const LeaderScheduleContext = React.createContext<
+  React.MutableRefObject<[number, LeaderSchedule] | undefined> | undefined
 >(undefined);
 
 const SlotMetricsContext = React.createContext<
@@ -10,12 +16,19 @@ const SlotMetricsContext = React.createContext<
 >(undefined);
 
 const SlotMetricsCounter = React.createContext<number | undefined>(undefined);
+const ToggleMetricsContext = React.createContext<
+  [boolean, React.Dispatch<React.SetStateAction<boolean>>] | undefined
+>(undefined);
 
 export type SlotTiming = {
   firstShred: number;
+  parent: number;
   fullSlot?: number;
+  lastShred?: number;
   replayStart?: number;
   frozen?: number;
+  dead?: number;
+  err?: string;
   numEntries?: number;
   numTransactions?: number;
   maxTpe?: number;
@@ -33,6 +46,15 @@ export function useTargetSlotRef() {
   return slotRef;
 }
 
+export function useLeaderSchedule() {
+  const res = React.useContext(LeaderScheduleContext);
+  if (!res) {
+    throw new Error(`useLeaderSchedule must be used within a SlotProvider`);
+  }
+
+  return res;
+}
+
 export function useSlotTiming() {
   React.useContext(SlotMetricsCounter);
   const ref = React.useContext(SlotMetricsContext);
@@ -43,24 +65,61 @@ export function useSlotTiming() {
   return ref;
 }
 
+export function useStopMetrics() {
+  const toggle = React.useContext(ToggleMetricsContext);
+  if (!toggle) {
+    throw new Error(`useMetricsToggle must be used within a SlotProvider`);
+  }
+
+  return toggle;
+}
+
 type ProviderProps = { children: React.ReactNode };
 export function SlotProvider({ children }: ProviderProps) {
   const connection = useConnection();
   const targetSlot = React.useRef<number>();
   const slotMetrics = React.useRef(new Map<number, SlotTiming>());
   const [metricsCounter, setCounter] = React.useState(0);
+  const stoppedState = React.useState(false);
+  const stopped = stoppedState[0];
+  const leaderSchedule = React.useRef<[number, LeaderSchedule]>();
 
   React.useEffect(() => {
-    if (connection === undefined) return;
+    if (connection) {
+      (async () => {
+        try {
+          const epochInfo = await connection.getEpochInfo();
+          const slotOffset = epochInfo.absoluteSlot - epochInfo.slotIndex;
+          const schedule = await connection.getLeaderSchedule();
+          leaderSchedule.current = [slotOffset, schedule];
+        } catch (err) {
+          console.error("failed to get leader schedule", err);
+        }
+      })();
+    }
+  }, [connection]);
+
+  React.useEffect(() => {
+    if (stopped || connection === undefined) {
+      return;
+    } else {
+      slotMetrics.current.clear();
+    }
 
     let disabledSlotSubscription = false;
     const slotSubscription = connection.onSlotChange(({ slot }) => {
-      targetSlot.current = slot;
+      if (!DEBUG_MODE) {
+        targetSlot.current = slot;
+      }
     });
 
     const interval = setInterval(() => {
       setCounter((c) => c + 1);
     }, 1000);
+
+    const updateTimeout = setTimeout(() => {
+      stoppedState[1](true);
+    }, 5 * 60 * 1000);
 
     const slotUpdateSubscription = connection.onSlotUpdate((notification) => {
       // Remove if slot update api is active
@@ -69,11 +128,12 @@ export function SlotProvider({ children }: ProviderProps) {
         disabledSlotSubscription = true;
       }
 
-      const { type, slot, timestamp } = notification;
-      if (type === "firstShredReceived") {
+      const { slot, timestamp } = notification;
+      if (notification.type === "firstShredReceived") {
         targetSlot.current = Math.max(slot, targetSlot.current || 0);
         slotMetrics.current.set(slot, {
           firstShred: timestamp,
+          parent: notification.parent,
         });
         return;
       }
@@ -83,7 +143,11 @@ export function SlotProvider({ children }: ProviderProps) {
         return;
       }
 
-      switch (type) {
+      switch (notification.type) {
+        case "lastShredReceived": {
+          slotTiming.lastShred = timestamp;
+          break;
+        }
         case "allShredsReceived": {
           slotTiming.fullSlot = timestamp;
           break;
@@ -92,12 +156,19 @@ export function SlotProvider({ children }: ProviderProps) {
           slotTiming.replayStart = timestamp;
           break;
         }
+        case "dead": {
+          slotTiming.dead = timestamp;
+          slotTiming.err = notification.err;
+          break;
+        }
         case "frozen": {
           slotTiming.frozen = timestamp;
-          const entryStats = (notification as any).entry_stats;
-          slotTiming.numEntries = entryStats.numEntries;
-          slotTiming.numTransactions = entryStats.numTransactions;
-          slotTiming.maxTpe = entryStats.maxTxPerEntry;
+          const entryStats = notification.entry_stats;
+          if (entryStats) {
+            slotTiming.numEntries = entryStats.numEntries;
+            slotTiming.numTransactions = entryStats.numTransactions;
+            slotTiming.maxTpe = entryStats.maxTxPerEntry;
+          }
           break;
         }
         case "voted": {
@@ -117,18 +188,23 @@ export function SlotProvider({ children }: ProviderProps) {
 
     return () => {
       clearInterval(interval);
+      clearTimeout(updateTimeout);
       if (!disabledSlotSubscription) {
         connection.removeSlotChangeListener(slotSubscription);
       }
       connection.removeSlotUpdateListener(slotUpdateSubscription);
     };
-  }, [connection]);
+  }, [connection, stopped]);
 
   return (
     <SlotContext.Provider value={targetSlot}>
       <SlotMetricsContext.Provider value={slotMetrics}>
         <SlotMetricsCounter.Provider value={metricsCounter}>
-          {children}
+          <ToggleMetricsContext.Provider value={stoppedState}>
+            <LeaderScheduleContext.Provider value={leaderSchedule}>
+              {children}
+            </LeaderScheduleContext.Provider>
+          </ToggleMetricsContext.Provider>
         </SlotMetricsCounter.Provider>
       </SlotMetricsContext.Provider>
     </SlotContext.Provider>
