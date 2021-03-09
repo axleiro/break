@@ -56,13 +56,14 @@ function SlotTable() {
                 <th className="text-muted sticky">Leader</th>
                 <th className="text-muted sticky">Slot + Parent</th>
                 <th className="text-muted sticky">Tx Count</th>
-                <th className="text-muted sticky">Entry Count</th>
+                <th className="text-muted sticky">Tx Success %</th>
+                <th className="text-muted sticky">Tx Entries</th>
+                <th className="text-muted sticky">Avg Tx Per Entry</th>
                 <th className="text-muted sticky">Max Tx Per Entry</th>
                 <th className="text-muted sticky">First Shred</th>
-                <th className="text-muted sticky">All Shreds</th>
-                <th className="text-muted sticky">Replay Start</th>
-                <th className="text-muted sticky">Replay End / Fail</th>
-                <th className="text-muted sticky">Voted</th>
+                <th className="text-muted sticky">Shreds Full</th>
+                <th className="text-muted sticky">Bank Created</th>
+                <th className="text-muted sticky">Bank Frozen / Dead</th>
                 <th className="text-muted sticky">Confirmed</th>
                 <th className="text-muted sticky">Rooted</th>
               </tr>

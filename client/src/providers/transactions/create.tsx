@@ -159,7 +159,6 @@ export function createTransaction(
                   slot: context.slot,
                 });
               } else if (notification.type === "receivedSignature") {
-                console.log(encodedSignature, notification, context);
                 dispatch({
                   type: "received",
                   timestamp: notification.timestamp,

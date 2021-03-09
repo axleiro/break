@@ -133,14 +133,15 @@ function DebugTable() {
                 <th className="text-muted sticky">Target Slot</th>
                 <th className="text-muted sticky">Inclusion Slot</th>
                 <th className="text-muted sticky">Tx Count</th>
-                <th className="text-muted sticky">Entry Count</th>
+                <th className="text-muted sticky">Tx Success %</th>
+                <th className="text-muted sticky">Tx Entries</th>
+                <th className="text-muted sticky">Avg Tx Per Entry</th>
                 <th className="text-muted sticky">Max Tx Per Entry</th>
                 <th className="text-muted sticky">First Shred</th>
                 <th className="text-muted sticky">Tx Landed</th>
-                <th className="text-muted sticky">All Shreds</th>
-                <th className="text-muted sticky">Replay Start</th>
-                <th className="text-muted sticky">Replay End</th>
-                <th className="text-muted sticky">Voted</th>
+                <th className="text-muted sticky">Shreds Full</th>
+                <th className="text-muted sticky">Bank Created</th>
+                <th className="text-muted sticky">Bank Frozen</th>
                 <th className="text-muted sticky">Confirmed</th>
                 <th className="text-muted sticky">Rooted</th>
               </tr>

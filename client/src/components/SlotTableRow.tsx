@@ -52,6 +52,14 @@ export function SlotTableRow({ slot, timing }: Props) {
     }
   }, [slot, schedule]);
 
+  let txCount, txSuccessRate, avgTpe;
+  if (timing?.stats) {
+    txCount = timing.stats.numSuccessfulTransactions + timing.stats.numFailedTransactions;
+    const rawTxRate = timing.stats.numSuccessfulTransactions / txCount;
+    txSuccessRate = `${(100 * rawTxRate).toFixed(1)}%`;
+    avgTpe = (txCount / timing?.stats.numTransactionEntries).toFixed(1);
+  }
+
   return (
     <tr className="debug-row text-monospace">
       <td>{leader ? leader.slice(0, 7) : "-"}</td>
@@ -63,23 +71,24 @@ export function SlotTableRow({ slot, timing }: Props) {
           <div>&emsp;{slot}</div>
         </div>
       </td>
-      <td>{timing?.numTransactions || "-"}</td>
-      <td>{timing?.numEntries || "-"}</td>
-      <td>{timing?.maxTpe || "-"}</td>
+      <td>{txCount || "-"}</td>
+      <td>{txSuccessRate || "-"}</td>
+      <td>{timing?.stats?.numTransactionEntries || "-"}</td>
+      <td>{avgTpe || "-"}</td>
+      <td>{timing?.stats?.maxTransactionsPerEntry || "-"}</td>
       <TdTimestamp time={timing?.firstShred} />
       <TdTimestamp time={timing?.fullSlot} />
-      <TdTimestamp time={timing?.replayStart} />
+      <TdTimestamp time={timing?.createdBank} />
       {timing?.err === undefined ? (
         <>
           <TdTimestamp time={timing?.frozen} />
-          <TdTimestamp time={timing?.voted} />
           <TdTimestamp time={timing?.confirmed} />
           <TdTimestamp time={timing?.rooted} />
         </>
       ) : (
         <>
           <TdTimestamp time={timing?.dead} />
-          <td colSpan={3}>{timing?.err}</td>
+          <td colSpan={2}>{timing?.err}</td>
         </>
       )}
     </tr>

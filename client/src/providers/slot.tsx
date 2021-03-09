@@ -20,21 +20,24 @@ const ToggleMetricsContext = React.createContext<
   [boolean, React.Dispatch<React.SetStateAction<boolean>>] | undefined
 >(undefined);
 
+export type SlotStats = {
+  numTransactionEntries: number;
+  numSuccessfulTransactions: number;
+  numFailedTransactions: number;
+  maxTransactionsPerEntry: number;
+};
+
 export type SlotTiming = {
   firstShred: number;
-  parent: number;
+  parent?: number;
   fullSlot?: number;
-  lastShred?: number;
-  replayStart?: number;
+  createdBank?: number;
   frozen?: number;
   dead?: number;
   err?: string;
-  numEntries?: number;
-  numTransactions?: number;
-  maxTpe?: number;
-  voted?: number;
   confirmed?: number;
   rooted?: number;
+  stats?: SlotStats;
 };
 
 export function useTargetSlotRef() {
@@ -133,7 +136,6 @@ export function SlotProvider({ children }: ProviderProps) {
         targetSlot.current = Math.max(slot, targetSlot.current || 0);
         slotMetrics.current.set(slot, {
           firstShred: timestamp,
-          parent: notification.parent,
         });
         return;
       }
@@ -144,16 +146,13 @@ export function SlotProvider({ children }: ProviderProps) {
       }
 
       switch (notification.type) {
-        case "lastShredReceived": {
-          slotTiming.lastShred = timestamp;
-          break;
-        }
-        case "allShredsReceived": {
+        case "shredsFull": {
           slotTiming.fullSlot = timestamp;
           break;
         }
-        case "startReplay": {
-          slotTiming.replayStart = timestamp;
+        case "createdBank": {
+          slotTiming.parent = notification.parent;
+          slotTiming.createdBank = timestamp;
           break;
         }
         case "dead": {
@@ -163,16 +162,7 @@ export function SlotProvider({ children }: ProviderProps) {
         }
         case "frozen": {
           slotTiming.frozen = timestamp;
-          const entryStats = notification.entry_stats;
-          if (entryStats) {
-            slotTiming.numEntries = entryStats.numEntries;
-            slotTiming.numTransactions = entryStats.numTransactions;
-            slotTiming.maxTpe = entryStats.maxTxPerEntry;
-          }
-          break;
-        }
-        case "voted": {
-          slotTiming.voted = timestamp;
+          slotTiming.stats = notification.stats;
           break;
         }
         case "optimisticConfirmation": {

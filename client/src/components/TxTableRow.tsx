@@ -46,6 +46,15 @@ export function TxTableRow({ transaction }: Props) {
     slotTiming = slotMetrics.current.get(landedSlot);
   }
 
+  let txCount, txSuccessRate, avgTpe;
+  if (slotTiming?.stats) {
+    // console.log("SLOT TIMING FOR SLOT", landedSlot, slotTiming);
+    txCount = slotTiming.stats.numSuccessfulTransactions + slotTiming.stats.numFailedTransactions;
+    const rawTxRate = slotTiming.stats.numSuccessfulTransactions / txCount;
+    txSuccessRate = `${(100 * rawTxRate).toFixed(1)}%`;
+    avgTpe = (txCount / slotTiming?.stats.numTransactionEntries).toFixed(1);
+  }
+
   return (
     <tr
       className="debug-row text-monospace"
@@ -54,15 +63,16 @@ export function TxTableRow({ transaction }: Props) {
       <td>{signature.slice(0, 7)}…</td>
       <td>{targetSlot || "-"}</td>
       <td>{landedSlot || "-"}</td>
-      <td>{slotTiming?.numTransactions || "-"}</td>
-      <td>{slotTiming?.numEntries || "-"}</td>
-      <td>{slotTiming?.maxTpe || "-"}</td>
+      <td>{txCount || "-"}</td>
+      <td>{txSuccessRate || "-"}</td>
+      <td>{slotTiming?.stats?.numTransactionEntries || "-"}</td>
+      <td>{avgTpe || "-"}</td>
+      <td>{slotTiming?.stats?.maxTransactionsPerEntry || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, slotTiming?.firstShred) || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, landedTime) || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, slotTiming?.fullSlot) || "-"}</td>
-      <td>{timeElapsed(timing?.subscribed, slotTiming?.replayStart) || "-"}</td>
+      <td>{timeElapsed(timing?.subscribed, slotTiming?.createdBank) || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, slotTiming?.frozen) || "-"}</td>
-      <td>{timeElapsed(timing?.subscribed, slotTiming?.voted) || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, slotTiming?.confirmed) || "-"}</td>
       <td>{timeElapsed(timing?.subscribed, slotTiming?.rooted) || "-"}</td>
     </tr>
