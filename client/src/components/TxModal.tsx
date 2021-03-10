@@ -7,6 +7,7 @@ import {
 import { useClusterParam } from "providers/server/http";
 import { useSlotTiming } from "providers/slot";
 import { timeElapsed } from "./TxTableRow";
+import { DEBUG_MODE } from "providers/transactions/confirmed";
 
 export function TransactionModal() {
   const selectedTx = useSelectedTransaction();
@@ -153,7 +154,7 @@ export function TransactionDetails({
       const subscribed = transaction.timing.subscribed;
       if (subscribed !== undefined) {
         let confTime: string | undefined;
-        if (transaction.timing.confirmed !== undefined) {
+        if (!DEBUG_MODE && transaction.timing.confirmed !== undefined) {
           confTime = `${transaction.timing.confirmed}s`;
         } else if (transaction.slot.landed !== undefined) {
           const slotTiming = slotMetrics.current.get(transaction.slot.landed);
@@ -161,7 +162,7 @@ export function TransactionDetails({
           confTime = timeElapsed(subscribed, confirmed);
         }
         if (confTime) {
-          return <span className="text-success">{confTime} sec</span>;
+          return <span className="text-success">{confTime}</span>;
         }
       }
     }

@@ -15,10 +15,9 @@ const SlotMetricsContext = React.createContext<
   React.MutableRefObject<Map<number, SlotTiming>> | undefined
 >(undefined);
 
+type ToggleMetrics = [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 const SlotMetricsCounter = React.createContext<number | undefined>(undefined);
-const ToggleMetricsContext = React.createContext<
-  [boolean, React.Dispatch<React.SetStateAction<boolean>>] | undefined
->(undefined);
+const ToggleMetricsContext = React.createContext<ToggleMetrics | undefined>(undefined);
 
 export type SlotStats = {
   numTransactionEntries: number;
@@ -83,9 +82,12 @@ export function SlotProvider({ children }: ProviderProps) {
   const targetSlot = React.useRef<number>();
   const slotMetrics = React.useRef(new Map<number, SlotTiming>());
   const [metricsCounter, setCounter] = React.useState(0);
-  const stoppedState = React.useState(false);
-  const stopped = stoppedState[0];
+  const [stopped, setStopped] = React.useState(false);
   const leaderSchedule = React.useRef<[number, LeaderSchedule]>();
+
+  const stoppedState: ToggleMetrics = React.useMemo(() => {
+    return [stopped, setStopped];
+  }, [stopped, setStopped]);
 
   React.useEffect(() => {
     if (connection) {
@@ -121,7 +123,7 @@ export function SlotProvider({ children }: ProviderProps) {
     }, 1000);
 
     const updateTimeout = setTimeout(() => {
-      stoppedState[1](true);
+      setStopped(true);
     }, 5 * 60 * 1000);
 
     const slotUpdateSubscription = connection.onSlotUpdate((notification) => {
@@ -184,7 +186,7 @@ export function SlotProvider({ children }: ProviderProps) {
       }
       connection.removeSlotUpdateListener(slotUpdateSubscription);
     };
-  }, [connection, stopped]);
+  }, [connection, stopped, setStopped]);
 
   return (
     <SlotContext.Provider value={targetSlot}>
