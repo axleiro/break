@@ -151,10 +151,15 @@ export function TransactionDetails({
     }
     if (transaction.status === "success") {
       const subscribed = transaction.timing.subscribed;
-      if (subscribed !== undefined && transaction.slot.landed !== undefined) {
-        const slotTiming = slotMetrics.current.get(transaction.slot.landed);
-        const confirmed = slotTiming?.confirmed;
-        const confTime = timeElapsed(subscribed, confirmed);
+      if (subscribed !== undefined) {
+        let confTime: string | undefined;
+        if (transaction.timing.confirmed !== undefined) {
+          confTime = `${transaction.timing.confirmed}s`;
+        } else if (transaction.slot.landed !== undefined) {
+          const slotTiming = slotMetrics.current.get(transaction.slot.landed);
+          const confirmed = slotTiming?.confirmed;
+          confTime = timeElapsed(subscribed, confirmed);
+        }
         if (confTime) {
           return <span className="text-success">{confTime} sec</span>;
         }

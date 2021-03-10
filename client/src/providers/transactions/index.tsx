@@ -166,6 +166,10 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "new": {
       const { details, pendingTransaction } = action;
+      let subscribed: number | undefined;
+      if (!DEBUG_MODE) {
+        subscribed = performance.now();
+      }
       return [
         ...state,
         {
@@ -173,7 +177,9 @@ function reducer(state: State, action: Action): State {
           status: "pending",
           received: [],
           pending: pendingTransaction,
-          timing: {},
+          timing: {
+            subscribed,
+          },
         },
       ];
     }
@@ -560,10 +566,15 @@ export function useAvgConfirmationTime() {
   const confirmedTimes = state.reduce((confirmedTimes: number[], tx) => {
     if (tx.status === "success") {
       const subscribed = tx.timing.subscribed;
-      if (subscribed !== undefined && tx.slot.landed !== undefined) {
-        const slotTiming = slotMetrics.current.get(tx.slot.landed);
-        const confirmed = slotTiming?.confirmed;
-        const confTime = timeElapsed(subscribed, confirmed);
+      if (subscribed !== undefined) {
+        let confTime: number | undefined;
+        if (!DEBUG_MODE && tx.timing.confirmed !== undefined) {
+          confTime = tx.timing.confirmed;
+        } else if (tx.slot.landed !== undefined) {
+          const slotTiming = slotMetrics.current.get(tx.slot.landed);
+          const confirmed = slotTiming?.confirmed;
+          confTime = timeElapsed(subscribed, confirmed);
+        }
         if (confTime) confirmedTimes.push(confTime);
       }
     }
