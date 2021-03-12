@@ -48,8 +48,9 @@ export function TxTableRow({ transaction }: Props) {
 
   let txCount, txSuccessRate, avgTpe;
   if (slotTiming?.stats) {
-    // console.log("SLOT TIMING FOR SLOT", landedSlot, slotTiming);
-    txCount = slotTiming.stats.numSuccessfulTransactions + slotTiming.stats.numFailedTransactions;
+    txCount =
+      slotTiming.stats.numSuccessfulTransactions +
+      slotTiming.stats.numFailedTransactions;
     const rawTxRate = slotTiming.stats.numSuccessfulTransactions / txCount;
     txSuccessRate = `${(100 * rawTxRate).toFixed(1)}%`;
     avgTpe = (txCount / slotTiming?.stats.numTransactionEntries).toFixed(1);

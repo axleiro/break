@@ -15,9 +15,15 @@ const SlotMetricsContext = React.createContext<
   React.MutableRefObject<Map<number, SlotTiming>> | undefined
 >(undefined);
 
+const LatestTimestampContext = React.createContext<
+  React.MutableRefObject<number | undefined> | undefined
+>(undefined);
+
 type ToggleMetrics = [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 const SlotMetricsCounter = React.createContext<number | undefined>(undefined);
-const ToggleMetricsContext = React.createContext<ToggleMetrics | undefined>(undefined);
+const ToggleMetricsContext = React.createContext<ToggleMetrics | undefined>(
+  undefined
+);
 
 export type SlotStats = {
   numTransactionEntries: number;
@@ -76,6 +82,15 @@ export function useStopMetrics() {
   return toggle;
 }
 
+export function useLatestTimestamp() {
+  const latest = React.useContext(LatestTimestampContext);
+  if (!latest) {
+    throw new Error(`useLatestTimestamp must be used within a SlotProvider`);
+  }
+
+  return latest;
+}
+
 type ProviderProps = { children: React.ReactNode };
 export function SlotProvider({ children }: ProviderProps) {
   const connection = useConnection();
@@ -84,6 +99,7 @@ export function SlotProvider({ children }: ProviderProps) {
   const [metricsCounter, setCounter] = React.useState(0);
   const [stopped, setStopped] = React.useState(false);
   const leaderSchedule = React.useRef<[number, LeaderSchedule]>();
+  const latestTimestamp = React.useRef<number>();
 
   const stoppedState: ToggleMetrics = React.useMemo(() => {
     return [stopped, setStopped];
@@ -134,6 +150,7 @@ export function SlotProvider({ children }: ProviderProps) {
       }
 
       const { slot, timestamp } = notification;
+      latestTimestamp.current = timestamp;
       if (notification.type === "firstShredReceived") {
         targetSlot.current = Math.max(slot, targetSlot.current || 0);
         slotMetrics.current.set(slot, {
@@ -194,7 +211,9 @@ export function SlotProvider({ children }: ProviderProps) {
         <SlotMetricsCounter.Provider value={metricsCounter}>
           <ToggleMetricsContext.Provider value={stoppedState}>
             <LeaderScheduleContext.Provider value={leaderSchedule}>
-              {children}
+              <LatestTimestampContext.Provider value={latestTimestamp}>
+                {children}
+              </LatestTimestampContext.Provider>
             </LeaderScheduleContext.Provider>
           </ToggleMetricsContext.Provider>
         </SlotMetricsCounter.Provider>

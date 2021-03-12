@@ -141,7 +141,6 @@ type SignatureSubscribed = {
   type: "subscribed";
   timestamp: number;
   trackingId: number;
-  slot: number;
 };
 
 type SignatureLanded = {

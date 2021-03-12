@@ -19,7 +19,7 @@ import { useSocket } from "providers/server/socket";
 import { reportError } from "utils";
 import { useConnection } from "providers/rpc";
 import { DEBUG_MODE, subscribedCommitments } from "./confirmed";
-import { useTargetSlotRef } from "providers/slot";
+import { useLatestTimestamp, useTargetSlotRef } from "providers/slot";
 
 const SEND_TIMEOUT_MS = 45000;
 const RETRY_INTERVAL_MS = 500;
@@ -37,6 +37,7 @@ export function CreateTxProvider({ children }: ProviderProps) {
   const idCounter = React.useRef<number>(0);
   const targetSlotRef = useTargetSlotRef();
   const programDataAccount = accounts?.programAccounts[0].toBase58();
+  const latestTimestamp = useLatestTimestamp();
 
   // Reset counter when program data accounts are refreshed
   React.useEffect(() => {
@@ -69,7 +70,8 @@ export function CreateTxProvider({ children }: ProviderProps) {
           accounts,
           id,
           dispatch,
-          socket
+          socket,
+          latestTimestamp
         );
       } else {
         reportError(
@@ -86,6 +88,7 @@ export function CreateTxProvider({ children }: ProviderProps) {
     accounts,
     dispatch,
     targetSlotRef,
+    latestTimestamp,
   ]);
 
   return (
@@ -103,7 +106,8 @@ export function createTransaction(
   accounts: AccountsConfig,
   trackingId: number,
   dispatch: Dispatch,
-  socket: WebSocket
+  socket: WebSocket,
+  latestTimestamp: React.MutableRefObject<number | undefined>
 ) {
   const { feeAccounts, programAccounts } = accounts;
 
@@ -148,17 +152,19 @@ export function createTransaction(
         });
 
         if (DEBUG_MODE) {
+          const timestamp = latestTimestamp.current;
+          if (timestamp) {
+            dispatch({
+              type: "subscribed",
+              timestamp,
+              trackingId,
+            });
+          }
+
           (connection as any).onTransaction(
             encodedSignature,
             (notification: any, context: any) => {
-              if (notification.type === "subscribedSignature") {
-                dispatch({
-                  type: "subscribed",
-                  timestamp: notification.timestamp,
-                  trackingId,
-                  slot: context.slot,
-                });
-              } else if (notification.type === "receivedSignature") {
+              if (notification.type === "receivedSignature") {
                 dispatch({
                   type: "received",
                   timestamp: notification.timestamp,

@@ -54,7 +54,9 @@ export function SlotTableRow({ slot, timing }: Props) {
 
   let txCount, txSuccessRate, avgTpe;
   if (timing?.stats) {
-    txCount = timing.stats.numSuccessfulTransactions + timing.stats.numFailedTransactions;
+    txCount =
+      timing.stats.numSuccessfulTransactions +
+      timing.stats.numFailedTransactions;
     const rawTxRate = timing.stats.numSuccessfulTransactions / txCount;
     txSuccessRate = `${(100 * rawTxRate).toFixed(1)}%`;
     avgTpe = (txCount / timing?.stats.numTransactionEntries).toFixed(1);
