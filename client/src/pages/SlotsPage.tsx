@@ -1,12 +1,10 @@
 import * as React from "react";
 
-import { useStopMetrics, useSlotTiming } from "providers/slot";
+import { useSlotTiming } from "providers/slot";
 import { SlotTableRow } from "components/SlotTableRow";
 import { Header } from "components/Header";
 
 export default function Slots() {
-  const [stopped, setStopped] = useStopMetrics();
-
   return (
     <div className="container-fluid mw-2 min-vh-100 d-flex flex-column">
       <Header />
@@ -17,12 +15,6 @@ export default function Slots() {
               <div className="d-flex align-items-center">
                 <span className="text-truncate">Live Slot Stats</span>
               </div>
-              <span
-                className="btn btn-pink text-uppercase text-truncate touch-action-none"
-                onClick={() => setStopped(!stopped)}
-              >
-                {stopped ? "Reset" : "Stop"}
-              </span>
             </div>
             <SlotTable />
           </div>

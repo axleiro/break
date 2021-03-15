@@ -161,13 +161,14 @@ export function createTransaction(
             });
           }
 
-          (connection as any).onTransaction(
+          connection.onSignatureWithOptions(
             encodedSignature,
-            (notification: any, context: any) => {
-              if (notification.type === "receivedSignature") {
+            (notification, context) => {
+              const timestamp = latestTimestamp.current;
+              if (timestamp && notification.type === "received") {
                 dispatch({
                   type: "received",
-                  timestamp: notification.timestamp,
+                  timestamp,
                   trackingId,
                   slot: context.slot,
                 });
@@ -181,17 +182,18 @@ export function createTransaction(
 
           const commitments = subscribedCommitments();
           commitments.forEach((commitment) => {
-            (connection as any).onTransaction(
+            connection.onSignatureWithOptions(
               encodedSignature,
-              (notification: any, context: any) => {
-                if (notification.type === "processedSignature") {
+              (notification, context) => {
+                const timestamp = latestTimestamp.current;
+                if (timestamp && notification.type === "status") {
                   const commitmentName = getCommitmentName(commitment);
                   dispatch({
                     type: "track",
                     commitmentName,
                     trackingId,
                     slot: context.slot,
-                    timestamp: notification.timestamp,
+                    timestamp,
                   });
                 }
               },

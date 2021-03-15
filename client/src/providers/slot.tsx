@@ -19,11 +19,7 @@ const LatestTimestampContext = React.createContext<
   React.MutableRefObject<number | undefined> | undefined
 >(undefined);
 
-type ToggleMetrics = [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 const SlotMetricsCounter = React.createContext<number | undefined>(undefined);
-const ToggleMetricsContext = React.createContext<ToggleMetrics | undefined>(
-  undefined
-);
 
 export type SlotStats = {
   numTransactionEntries: number;
@@ -73,15 +69,6 @@ export function useSlotTiming() {
   return ref;
 }
 
-export function useStopMetrics() {
-  const toggle = React.useContext(ToggleMetricsContext);
-  if (!toggle) {
-    throw new Error(`useMetricsToggle must be used within a SlotProvider`);
-  }
-
-  return toggle;
-}
-
 export function useLatestTimestamp() {
   const latest = React.useContext(LatestTimestampContext);
   if (!latest) {
@@ -97,13 +84,8 @@ export function SlotProvider({ children }: ProviderProps) {
   const targetSlot = React.useRef<number>();
   const slotMetrics = React.useRef(new Map<number, SlotTiming>());
   const [metricsCounter, setCounter] = React.useState(0);
-  const [stopped, setStopped] = React.useState(false);
   const leaderSchedule = React.useRef<[number, LeaderSchedule]>();
   const latestTimestamp = React.useRef<number>();
-
-  const stoppedState: ToggleMetrics = React.useMemo(() => {
-    return [stopped, setStopped];
-  }, [stopped, setStopped]);
 
   React.useEffect(() => {
     if (connection) {
@@ -121,7 +103,7 @@ export function SlotProvider({ children }: ProviderProps) {
   }, [connection]);
 
   React.useEffect(() => {
-    if (stopped || connection === undefined) {
+    if (connection === undefined) {
       return;
     } else {
       slotMetrics.current.clear();
@@ -137,10 +119,6 @@ export function SlotProvider({ children }: ProviderProps) {
     const interval = setInterval(() => {
       setCounter((c) => c + 1);
     }, 1000);
-
-    const updateTimeout = setTimeout(() => {
-      setStopped(true);
-    }, 5 * 60 * 1000);
 
     const slotUpdateSubscription = connection.onSlotUpdate((notification) => {
       // Remove if slot update api is active
@@ -165,7 +143,7 @@ export function SlotProvider({ children }: ProviderProps) {
       }
 
       switch (notification.type) {
-        case "shredsFull": {
+        case "completed": {
           slotTiming.fullSlot = timestamp;
           break;
         }
@@ -189,7 +167,10 @@ export function SlotProvider({ children }: ProviderProps) {
           break;
         }
         case "root": {
-          slotTiming.rooted = timestamp;
+          // Root notification may be sent twice
+          if (!slotTiming.rooted) {
+            slotTiming.rooted = timestamp;
+          }
           break;
         }
       }
@@ -197,25 +178,22 @@ export function SlotProvider({ children }: ProviderProps) {
 
     return () => {
       clearInterval(interval);
-      clearTimeout(updateTimeout);
       if (!disabledSlotSubscription) {
         connection.removeSlotChangeListener(slotSubscription);
       }
       connection.removeSlotUpdateListener(slotUpdateSubscription);
     };
-  }, [connection, stopped, setStopped]);
+  }, [connection]);
 
   return (
     <SlotContext.Provider value={targetSlot}>
       <SlotMetricsContext.Provider value={slotMetrics}>
         <SlotMetricsCounter.Provider value={metricsCounter}>
-          <ToggleMetricsContext.Provider value={stoppedState}>
-            <LeaderScheduleContext.Provider value={leaderSchedule}>
-              <LatestTimestampContext.Provider value={latestTimestamp}>
-                {children}
-              </LatestTimestampContext.Provider>
-            </LeaderScheduleContext.Provider>
-          </ToggleMetricsContext.Provider>
+          <LeaderScheduleContext.Provider value={leaderSchedule}>
+            <LatestTimestampContext.Provider value={latestTimestamp}>
+              {children}
+            </LatestTimestampContext.Provider>
+          </LeaderScheduleContext.Provider>
         </SlotMetricsCounter.Provider>
       </SlotMetricsContext.Provider>
     </SlotContext.Provider>
