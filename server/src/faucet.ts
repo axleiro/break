@@ -7,7 +7,7 @@ import {
   sendAndConfirmTransaction,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
-import { sleep } from "./utils";
+import { reportError, sleep } from "./utils";
 
 const ENCODED_PAYER_KEY = process.env.ENCODED_PAYER_KEY;
 const AIRDROP_AMOUNT = 10 * LAMPORTS_PER_SOL;
@@ -44,7 +44,7 @@ export default class Faucet {
           await connection.confirmTransaction(signature, "singleGossip");
           break;
         } catch (err) {
-          console.error("Failed to airdrop to faucet", err);
+          reportError(err, "Failed to airdrop to faucet");
           await sleep(1000);
         }
       }
@@ -92,7 +92,7 @@ export default class Faucet {
         await this.connection.confirmTransaction(signature, "singleGossip");
       }
     } catch (err) {
-      console.error("failed to check faucet balance", err);
+      reportError(err, "Failed to check faucet balance");
     } finally {
       this.checkingBalance = false;
     }

@@ -1,6 +1,6 @@
 import { Connection } from "@solana/web3.js";
 import dgram from "dgram";
-import { sleep } from "./utils";
+import { reportError, sleep } from "./utils";
 import AvailableNodesService from "./available_nodes";
 import LeaderScheduleService from "./leader_schedule";
 
@@ -65,7 +65,7 @@ export default class TpuProxy {
         console.log("TPU Proxy refreshing...");
         await this.reconnect();
       } catch (err) {
-        console.error("TPU Proxy failed to connect, reconnecting", err);
+        reportError(err, "TPU Proxy failed to connect, reconnecting");
         await sleep(1000);
       }
     } while (!this.connected());
@@ -78,7 +78,7 @@ export default class TpuProxy {
   onTransaction = (data: string | Uint8Array | Buffer): void => {
     if (PROXY_DISABLED && typeof data !== "string") {
       this.connection.sendRawTransaction(data).catch((err) => {
-        console.error(err, "failed to send raw tx");
+        reportError(err, "Failed to send transaction over HTTP");
       });
       return;
     }
@@ -122,7 +122,7 @@ export default class TpuProxy {
 
   private onTpuResult = (address: string, err: Error | null): void => {
     if (err) {
-      console.error("Error proxying transaction", err);
+      reportError(err, "Error proxying transaction to TPU");
       this.sockets.delete(address);
     }
   };

@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/node";
+
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -16,8 +18,17 @@ export async function endlessRetry<T>(
       console.log(name, "fetching");
       return await call();
     } catch (err) {
-      console.error(name, "request failed, retrying", err);
+      reportError(err, `Request ${name} failed, retrying`);
       await sleep(1000);
     }
+  }
+}
+
+export function reportError(err: Error, context: string): void {
+  console.error(context, err);
+  if (process.env.NODE_ENV === "production") {
+    Sentry.captureException(err, {
+      tags: { context },
+    });
   }
 }

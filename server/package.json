@@ -26,6 +26,8 @@
   },
   "testnetDefaultChannel": "edge",
   "dependencies": {
+    "@sentry/node": "^6.2.4",
+    "@sentry/tracing": "^6.2.4",
     "@solana/web3.js": "github:jstarry/solana-web3.js#slot-updates",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.11",
