@@ -41,6 +41,11 @@ export default class Faucet {
             feeAccount.publicKey,
             AIRDROP_AMOUNT
           );
+          console.log(
+            `Requested ${
+              AIRDROP_AMOUNT / LAMPORTS_PER_SOL
+            } SOL airdrop to ${feeAccount.publicKey.toBase58()} with transaction ${signature}`
+          );
           await connection.confirmTransaction(signature, "singleGossip");
           break;
         } catch (err) {

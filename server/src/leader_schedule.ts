@@ -69,7 +69,9 @@ export default class LeaderScheduleService {
           this.schedule[address][0] <
           currentSlotIndex + UPCOMING_SLOT_SEARCH
         ) {
-          console.log(`include ${address} for slot ${this.schedule[address][0]} current slot index: ${currentSlotIndex}`);
+          console.log(
+            `include ${address} for slot ${this.schedule[address][0]} current slot index: ${currentSlotIndex}`
+          );
           addresses.add(address);
         }
       }

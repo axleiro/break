@@ -23,8 +23,8 @@ export default class TpuProxy {
     if (!PROXY_DISABLED) {
       const leaderService = await LeaderScheduleService.start(connection);
       const nodesService = await AvailableNodesService.start(connection);
-      connection.onSlotUpdate(({type, slot}) => {
-        if (type === "firstShredReceived" && slot > proxy.lastSlot + 10) {
+      connection.onSlotUpdate(({ slot }) => {
+        if (slot > proxy.lastSlot + 10) {
           proxy.lastSlot = slot;
           const nodes = leaderService.getUpcomingNodes(slot);
           const tpuAddresses: string[] = [];
